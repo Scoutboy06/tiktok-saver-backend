@@ -1,16 +1,15 @@
-// import path from 'path';
 import dotenv from 'dotenv';
 import express from 'express';
 import morgan from 'morgan';
 import cloudinary from 'cloudinary';
+import cors from 'cors';
 
 import connectDB from './config/db.js';
 import router from './router.js';
 
-// const __dirname = path.resolve();
-
 dotenv.config();
-// dotenv.config({ path: path.resolve(__dirname, 'local.env') });
+
+connectDB();
 
 cloudinary.config({
 	cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -18,13 +17,20 @@ cloudinary.config({
 	api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-connectDB();
-
 const app = express();
+
+const whitelist = ['http://localhost:3000', 'https://tiktok-saver-frontend.vercel.app'];
+
+app.use(cors({
+	origin: (origin, callback) => {
+		if (whitelist.indexOf(origin) !== -1) callback(null, true);
+		else callback(new Error('Not allowed by CORS'));
+	}
+}));
 
 app.use(morgan('dev'));
 app.use(express.json());
-app.use('/api', router);
+app.use('/', router);
 
 
 const PORT = process.env.PORT || 5003;
